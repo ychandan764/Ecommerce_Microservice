@@ -1,0 +1,35 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: configserver
+  profiles:
+    active: native
+  cloud:
+    refresh:
+
+      never-refreshable: org.springframework.cloud.config.server.config.ConfigServerHealthIndicator
+    config:
+      server:
+        native:
+          search-locations: "file:///C:/Users/HP/Documents/workspace-spring-tools-for-eclipse-4.31.0.RELEASE/02 MicroServices Ecommerce Udemy/Ecommerce Microservice/configserver/src/main/resources/config"
+    bus:
+      enabled: true
+  rabbitmq:
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    listener:
+      simple:
+        missing-queues-fatal: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
