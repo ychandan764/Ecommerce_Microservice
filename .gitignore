@@ -9,3 +9,4 @@ target/
 *.zip
 *.tmp
 .DS_Store
+.env
