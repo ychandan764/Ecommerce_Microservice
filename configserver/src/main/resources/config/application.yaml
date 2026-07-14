@@ -4,6 +4,7 @@ spring:
     port: ${RABBIT_PORT:5672}
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASSWORD:guest}
+    requested-heartbeat: 60
     listener:
       simple:
         missing-queues-fatal: false
@@ -11,10 +12,27 @@ spring:
   cloud:
     bus:
       enabled: true
+      id: ${spring.application.name}:${server.port}
       refresh:
         enabled: true
       env:
         enabled: true
+    stream:
+      bindings:
+        springCloudBusInput:
+          group: ${spring.application.name}-${server.port}
+      rabbit:
+        bindings:
+          springCloudBusInput:
+            consumer:
+              missing-queues-fatal: false
+              recovery-interval: 5000
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
 
 eureka:
   client:

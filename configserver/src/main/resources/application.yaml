@@ -16,11 +16,25 @@ spring:
           search-locations: "file:///C:/Users/HP/Documents/workspace-spring-tools-for-eclipse-4.31.0.RELEASE/02 MicroServices Ecommerce Udemy/Ecommerce Microservice/configserver/src/main/resources/config"
     bus:
       enabled: true
+      # A distinct ID prevents Bus instances from filtering each other's events.
+      id: ${spring.application.name}:${server.port}
+    stream:
+      bindings:
+        springCloudBusInput:
+          # Avoid the anonymous, auto-delete queue used when no group is set.
+          group: ${spring.application.name}-${server.port}
+      rabbit:
+        bindings:
+          springCloudBusInput:
+            consumer:
+              missing-queues-fatal: false
+              recovery-interval: 5000
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASSWORD:guest}
+    requested-heartbeat: 60
     listener:
       simple:
         missing-queues-fatal: false

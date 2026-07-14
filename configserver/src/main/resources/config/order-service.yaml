@@ -1,6 +1,12 @@
 server:
   port: 8083
 
+openapi:
+  title: Order Service API
+  description: REST API for cart and order management.
+  version: 1.0.0
+  server-url: /
+
 clients:
   user-service:
     url: http://localhost:8081
@@ -17,9 +23,9 @@ rabbitmq:
 
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/userdb}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

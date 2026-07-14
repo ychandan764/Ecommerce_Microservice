@@ -26,6 +26,9 @@ public class GatewayRoutesConfig {
         return builder.routes()
                 .route("user-service", r -> r.path("/api/users/**")
                         .uri("lb://user-service"))
+                .route("user-service-openapi", r -> r.path("/docs/user-service")
+                        .filters(f -> f.setPath("/api-docs"))
+                        .uri("lb://user-service"))
                 .route("product-service", r -> r.path("/api/v1/products", "/api/v1/products/**")
                         .filters(f -> f
                                 .circuitBreaker(c -> c
@@ -35,7 +38,13 @@ public class GatewayRoutesConfig {
                                         .setRateLimiter(redisRateLimiter())
                                         .setKeyResolver(hostNameKeyResolver())))
                         .uri("lb://product-service"))
+                .route("product-service-openapi", r -> r.path("/docs/product-service")
+                        .filters(f -> f.setPath("/api-docs"))
+                        .uri("lb://product-service"))
                 .route("order-service", r -> r.path("/api/orders", "/api/orders/**", "/api/cart", "/api/cart/**")
+                        .uri("lb://order-service"))
+                .route("order-service-openapi", r -> r.path("/docs/order-service")
+                        .filters(f -> f.setPath("/api-docs"))
                         .uri("lb://order-service"))
                 .route("eureka-server", r -> r.path("/eureka/web")
                         .filters(f -> f.setPath("/"))
