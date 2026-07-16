@@ -8,20 +8,17 @@ spring:
     active: native
   cloud:
     refresh:
-
       never-refreshable: org.springframework.cloud.config.server.config.ConfigServerHealthIndicator
     config:
       server:
         native:
-          search-locations: "file:///C:/Users/HP/Documents/workspace-spring-tools-for-eclipse-4.31.0.RELEASE/02 MicroServices Ecommerce Udemy/Ecommerce Microservice/configserver/src/main/resources/config"
+          search-locations: ${CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS:classpath:/config/,file:/config/}
     bus:
       enabled: true
-      # A distinct ID prevents Bus instances from filtering each other's events.
       id: ${spring.application.name}:${server.port}
     stream:
       bindings:
         springCloudBusInput:
-          # Avoid the anonymous, auto-delete queue used when no group is set.
           group: ${spring.application.name}-${server.port}
       rabbit:
         bindings:

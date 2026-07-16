@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database Service
   postgres:
     image: postgres:15-alpine
     container_name: uecommerce-postgres
@@ -19,7 +18,6 @@ services:
       timeout: 20s
       retries: 10
 
-  # pgAdmin Service
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: uecommerce-pgadmin
@@ -34,7 +32,6 @@ services:
     links:
       - postgres
 
-  # RabbitMQ Service
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq
@@ -44,8 +41,8 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
       RABBITMQ_DEFAULT_VHOST: /
     ports:
-      - "5672:5672"   # RabbitMQ port
-      - "15672:15672" # Management UI port
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - rabbitmq_data:/var/lib/rabbitmq
@@ -55,7 +52,6 @@ services:
       timeout: 10s
       retries: 5
 
-  # Redis Service for Rate Limiter
   redis:
     image: redis:alpine
     container_name: redis-ratelimiter

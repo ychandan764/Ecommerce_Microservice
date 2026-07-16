@@ -4,12 +4,16 @@ import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Mono;
 
 @Configuration
 public class GatewayRoutesConfig {
+
+    @Value("${services.eureka-url:http://localhost:8761}")
+    private String eurekaUrl;
 
     @Bean
     public RedisRateLimiter redisRateLimiter(){
@@ -48,9 +52,9 @@ public class GatewayRoutesConfig {
                         .uri("lb://order-service"))
                 .route("eureka-server", r -> r.path("/eureka/web")
                         .filters(f -> f.setPath("/"))
-                        .uri("http://localhost:8761"))
+                        .uri(eurekaUrl))
                 .route("eureka-server-static", r -> r.path("/eureka/**")
-                        .uri("http://localhost:8761"))
+                        .uri(eurekaUrl))
                 .build();
     }
 }
