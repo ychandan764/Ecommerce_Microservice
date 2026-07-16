@@ -28,8 +28,7 @@ services:
     restart: unless-stopped
 
   configserver:
-    build:
-      context: ./configserver
+    image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/configserver:${IMAGE_TAG:-latest}
     container_name: ecommerce-configserver
     restart: unless-stopped
     environment:
@@ -45,8 +44,7 @@ services:
       - rabbitmq
 
   eureka-server:
-    build:
-      context: ./eureka
+    image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/eureka-server:${IMAGE_TAG:-latest}
     container_name: ecommerce-eureka
     restart: unless-stopped
     environment:
@@ -57,8 +55,7 @@ services:
       - configserver
 
   gateway:
-    build:
-      context: ./gateway
+    image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/gateway:${IMAGE_TAG:-latest}
     container_name: ecommerce-gateway
     restart: unless-stopped
     environment:
@@ -75,8 +72,7 @@ services:
       - redis
 
   user-service:
-    build:
-      context: ./E_User
+    image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/user-service:${IMAGE_TAG:-latest}
     container_name: ecommerce-user
     restart: unless-stopped
     environment:
@@ -98,8 +94,7 @@ services:
       - rabbitmq
 
   product-service:
-    build:
-      context: ./E_Product
+    image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/product-service:${IMAGE_TAG:-latest}
     container_name: ecommerce-product
     restart: unless-stopped
     environment:
@@ -121,8 +116,7 @@ services:
       - rabbitmq
 
   order-service:
-    build:
-      context: ./E_Order
+    image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/order-service:${IMAGE_TAG:-latest}
     container_name: ecommerce-order
     restart: unless-stopped
     environment:
@@ -146,8 +140,7 @@ services:
       - rabbitmq
 
   notification:
-    build:
-      context: ./notification
+    image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/notification:${IMAGE_TAG:-latest}
     container_name: ecommerce-notification
     restart: unless-stopped
     environment:
