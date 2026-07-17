@@ -156,6 +156,7 @@ jobs:
             local delay=5
 
             until http_check "$url"; do
+              echo "Waiting for $name: $url"
               attempts=$((attempts - 1))
               if [ "$attempts" -le 0 ]; then
                 echo "$name did not become healthy: $url"
@@ -173,6 +174,7 @@ jobs:
             local attempts=60
             local delay=5
             until http_body "http://localhost:8761/eureka/apps" | grep -q "order-service"; do
+              echo "Waiting for order-service registration in Eureka"
               attempts=$((attempts - 1))
               if [ "$attempts" -le 0 ]; then
                 echo "order-service was not registered in Eureka"
@@ -188,5 +190,5 @@ jobs:
           wait_for_http "eureka-server" "http://localhost:8761/actuator/health"
           wait_for_http "order-service" "http://localhost:8083/actuator/health"
           wait_for_eureka_registration
-          wait_for_http "gateway" "http://localhost:8080/actuator/health"
+          wait_for_http "gateway swagger ui" "http://localhost:8080/swagger-ui.html"
           EOF
