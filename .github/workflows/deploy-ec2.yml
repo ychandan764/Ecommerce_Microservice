@@ -113,4 +113,80 @@ jobs:
           EC2_HOST: ${{ secrets.EC2_HOST }}
           EC2_APP_DIR: ${{ secrets.EC2_APP_DIR }}
         run: |
-          ssh "${EC2_USER}@${EC2_HOST}" "cd '${EC2_APP_DIR}' && printf '%s' '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ secrets.REGISTRY_USERNAME }}' --password-stdin && IMAGE_REGISTRY='${IMAGE_REGISTRY}' IMAGE_TAG='${IMAGE_TAG}' docker compose -f docker-compose.ec2.yml pull && IMAGE_REGISTRY='${IMAGE_REGISTRY}' IMAGE_TAG='${IMAGE_TAG}' docker compose -f docker-compose.ec2.yml up -d --remove-orphans"
+          ssh "${EC2_USER}@${EC2_HOST}" "EC2_APP_DIR='${EC2_APP_DIR}' IMAGE_REGISTRY='${IMAGE_REGISTRY}' IMAGE_TAG='${IMAGE_TAG}' bash -se" <<'EOF'
+          set -euo pipefail
+
+          cd "$EC2_APP_DIR"
+
+          printf '%s' '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ secrets.REGISTRY_USERNAME }}' --password-stdin
+
+          IMAGE_REGISTRY="$IMAGE_REGISTRY" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.ec2.yml pull
+          IMAGE_REGISTRY="$IMAGE_REGISTRY" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.ec2.yml up -d --remove-orphans
+
+          http_check() {
+            local url="$1"
+            if command -v curl >/dev/null 2>&1; then
+              curl -fsS "$url" >/dev/null
+              return $?
+            fi
+            if command -v wget >/dev/null 2>&1; then
+              wget -qO- "$url" >/dev/null
+              return $?
+            fi
+            return 127
+          }
+
+          http_body() {
+            local url="$1"
+            if command -v curl >/dev/null 2>&1; then
+              curl -fsS "$url"
+              return $?
+            fi
+            if command -v wget >/dev/null 2>&1; then
+              wget -qO- "$url"
+              return $?
+            fi
+            return 127
+          }
+
+          wait_for_http() {
+            local name="$1"
+            local url="$2"
+            local attempts=60
+            local delay=5
+
+            until http_check "$url"; do
+              attempts=$((attempts - 1))
+              if [ "$attempts" -le 0 ]; then
+                echo "$name did not become healthy: $url"
+                docker compose -f docker-compose.ec2.yml ps
+                docker compose -f docker-compose.ec2.yml logs --tail 100 configserver eureka-server order-service gateway || true
+                exit 1
+              fi
+              sleep "$delay"
+            done
+
+            echo "$name is healthy: $url"
+          }
+
+          wait_for_eureka_registration() {
+            local attempts=60
+            local delay=5
+            until http_body "http://localhost:8761/eureka/apps" | grep -q "order-service"; do
+              attempts=$((attempts - 1))
+              if [ "$attempts" -le 0 ]; then
+                echo "order-service was not registered in Eureka"
+                docker compose -f docker-compose.ec2.yml ps
+                docker compose -f docker-compose.ec2.yml logs --tail 100 order-service eureka-server || true
+                exit 1
+              fi
+              sleep "$delay"
+            done
+          }
+
+          wait_for_http "configserver" "http://localhost:8888/actuator/health"
+          wait_for_http "eureka-server" "http://localhost:8761/actuator/health"
+          wait_for_http "order-service" "http://localhost:8083/actuator/health"
+          wait_for_eureka_registration
+          wait_for_http "gateway" "http://localhost:8080/actuator/health"
+          EOF
