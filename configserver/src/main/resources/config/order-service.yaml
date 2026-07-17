@@ -22,6 +22,15 @@ rabbitmq:
     key: order.tracking
 
 spring:
+  rabbitmq:
+    host: ${RABBIT_HOST:rabbitmq}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USER:guest}
+    password: ${RABBIT_PASSWORD:guest}
+    requested-heartbeat: 60
+    listener:
+      simple:
+        missing-queues-fatal: false
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/userdb}
     username: ${DB_USERNAME:postgres}
