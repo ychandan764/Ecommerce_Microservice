@@ -9,6 +9,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-userdb}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
 
   rabbitmq:
     image: rabbitmq:4-management
@@ -21,11 +27,23 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   redis:
     image: redis:alpine
     container_name: ecommerce-redis
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   configserver:
     image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/configserver:${IMAGE_TAG:-latest}
@@ -41,7 +59,14 @@ services:
     ports:
       - "8888:8888"
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8888/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
 
   eureka-server:
     image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/eureka-server:${IMAGE_TAG:-latest}
@@ -52,7 +77,14 @@ services:
     ports:
       - "8761:8761"
     depends_on:
-      - configserver
+      configserver:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8761/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
 
   gateway:
     image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/gateway:${IMAGE_TAG:-latest}
@@ -67,9 +99,18 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - configserver
-      - eureka-server
-      - redis
+      configserver:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/swagger-ui.html >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
 
   user-service:
     image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/user-service:${IMAGE_TAG:-latest}
@@ -88,10 +129,20 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - configserver
-      - eureka-server
-      - postgres
-      - rabbitmq
+      configserver:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8081/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
 
   product-service:
     image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/product-service:${IMAGE_TAG:-latest}
@@ -110,10 +161,20 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - configserver
-      - eureka-server
-      - postgres
-      - rabbitmq
+      configserver:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8082/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
 
   order-service:
     image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/order-service:${IMAGE_TAG:-latest}
@@ -134,10 +195,20 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - configserver
-      - eureka-server
-      - postgres
-      - rabbitmq
+      configserver:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
 
   notification:
     image: ${IMAGE_REGISTRY:-ghcr.io/ychandan764}/notification:${IMAGE_TAG:-latest}
@@ -151,7 +222,14 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8084/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
 
 volumes:
   postgres_data:
