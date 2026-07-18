@@ -83,7 +83,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8888/actuator/health >/dev/null"]
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 12
       start_period: 60s
@@ -208,8 +208,8 @@ services:
       DB_URL: ${ORDER_DB_URL:-jdbc:postgresql://postgres:5432/orderdb}
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
-      USER_SERVICE_URL: http://user-service:8081
-      PRODUCT_SERVICE_URL: http://product-service:8082
+      CLIENTS_USER_SERVICE_URL: http://user-service:8081
+      CLIENTS_PRODUCT_SERVICE_URL: http://product-service:8082
       RABBIT_HOST: rabbitmq
       RABBIT_PORT: 5672
       RABBIT_USER: guest

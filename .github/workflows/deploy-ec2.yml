@@ -120,8 +120,8 @@ jobs:
 
           printf '%s' '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ secrets.REGISTRY_USERNAME }}' --password-stdin
 
-          IMAGE_REGISTRY="$IMAGE_REGISTRY" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.ec2.yml pull
-          IMAGE_REGISTRY="$IMAGE_REGISTRY" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.ec2.yml up -d --remove-orphans
+          IMAGE_REGISTRY="$IMAGE_REGISTRY" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.ec2.yml pull configserver order-service
+          IMAGE_REGISTRY="$IMAGE_REGISTRY" IMAGE_TAG="$IMAGE_TAG" docker compose -f docker-compose.ec2.yml up -d --no-deps configserver order-service
 
           http_check() {
             local url="$1"
@@ -161,7 +161,7 @@ jobs:
               if [ "$attempts" -le 0 ]; then
                 echo "$name did not become healthy: $url"
                 docker compose -f docker-compose.ec2.yml ps
-                docker compose -f docker-compose.ec2.yml logs --tail 100 configserver eureka-server order-service gateway || true
+                docker compose -f docker-compose.ec2.yml logs --tail 100 configserver order-service || true
                 exit 1
               fi
               sleep "$delay"
@@ -187,8 +187,5 @@ jobs:
           }
 
           wait_for_http "configserver" "http://localhost:8888/actuator/health"
-          wait_for_http "eureka-server" "http://localhost:8761/actuator/health"
           wait_for_http "order-service" "http://localhost:8083/actuator/health"
-          wait_for_eureka_registration
-          wait_for_http "gateway swagger ui" "http://localhost:8080/swagger-ui.html"
           EOF

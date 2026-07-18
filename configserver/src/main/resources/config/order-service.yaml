@@ -9,9 +9,9 @@ openapi:
 
 clients:
   user-service:
-    url: http://localhost:8081
+    url: ${CLIENTS_USER_SERVICE_URL:http://localhost:8081}
   product-service:
-    url: http://localhost:8082
+    url: ${CLIENTS_PRODUCT_SERVICE_URL:http://localhost:8082}
 
 rabbitmq:
   exchange:
