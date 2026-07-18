@@ -16,6 +16,26 @@ services:
       retries: 10
       start_period: 20s
 
+  db-init:
+    image: postgres:15-alpine
+    container_name: ecommerce-db-init
+    restart: "no"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -ec '
+      export PGPASSWORD="$$POSTGRES_PASSWORD";
+      until pg_isready -h "$$POSTGRES_HOST" -p "$$POSTGRES_PORT" -U "$$POSTGRES_USER" >/dev/null 2>&1; do sleep 1; done;
+      createdb -h "$$POSTGRES_HOST" -p "$$POSTGRES_PORT" -U "$$POSTGRES_USER" productdb 2>/dev/null || true;
+      createdb -h "$$POSTGRES_HOST" -p "$$POSTGRES_PORT" -U "$$POSTGRES_USER" orderdb 2>/dev/null || true;
+      '
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: ecommerce-rabbitmq
@@ -151,7 +171,7 @@ services:
     environment:
       CONFIG_SERVER_URL: http://configserver:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      DB_URL: jdbc:postgresql://postgres:5432/userdb
+      DB_URL: ${PRODUCT_DB_URL:-jdbc:postgresql://postgres:5432/productdb}
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
       RABBIT_HOST: rabbitmq
@@ -169,6 +189,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8082/actuator/health >/dev/null"]
       interval: 10s
@@ -183,7 +205,7 @@ services:
     environment:
       CONFIG_SERVER_URL: http://configserver:8888
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      DB_URL: jdbc:postgresql://postgres:5432/userdb
+      DB_URL: ${ORDER_DB_URL:-jdbc:postgresql://postgres:5432/orderdb}
       DB_USERNAME: postgres
       DB_PASSWORD: 1234
       USER_SERVICE_URL: http://user-service:8081
@@ -203,6 +225,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost:8083/actuator/health >/dev/null"]
       interval: 10s

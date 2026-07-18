@@ -16,6 +16,26 @@ services:
       timeout: 20s
       retries: 10
 
+  db-init:
+    image: postgres:15-alpine
+    container_name: uecommerce-db-init
+    restart: "no"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -ec '
+      export PGPASSWORD="$$POSTGRES_PASSWORD";
+      until pg_isready -h "$$POSTGRES_HOST" -p "$$POSTGRES_PORT" -U "$$POSTGRES_USER" >/dev/null 2>&1; do sleep 1; done;
+      createdb -h "$$POSTGRES_HOST" -p "$$POSTGRES_PORT" -U "$$POSTGRES_USER" productdb 2>/dev/null || true;
+      createdb -h "$$POSTGRES_HOST" -p "$$POSTGRES_PORT" -U "$$POSTGRES_USER" orderdb 2>/dev/null || true;
+      '
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: uecommerce-pgadmin

@@ -9,7 +9,7 @@ openapi:
 
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/userdb}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/productdb}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:1234}
     driver-class-name: org.postgresql.Driver
